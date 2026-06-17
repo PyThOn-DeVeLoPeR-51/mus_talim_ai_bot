@@ -46,7 +46,9 @@ INPUT_DIR.mkdir(parents=True, exist_ok=True)
 RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
 
-ALLOWED_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
+# Hozircha faqat PDF qabul qilamiz.
+# Sabab: PDF 300 DPI render bo‘lgani uchun AI chizmani aniqroq tahlil qiladi.
+ALLOWED_EXTENSIONS = {".pdf"}
 TELEGRAM_MESSAGE_LIMIT = 3900
 
 
@@ -63,7 +65,7 @@ def is_allowed_file(filename: str) -> bool:
     return suffix in ALLOWED_EXTENSIONS
 
 
-def safe_filename(filename: str, default_name: str = "drawing") -> str:
+def safe_filename(filename: str, default_name: str = "drawing.pdf") -> str:
     """
     Foydalanuvchi yuborgan filename ichidan faqat fayl nomini olamiz.
     Bu Windows/Linux path muammolarining oldini oladi.
@@ -204,10 +206,9 @@ async def process_drawing(message: Message, file_id: str, filename: str) -> None
     if not is_allowed_file(filename):
         await message.answer(
             "❌ Bu format qabul qilinmaydi.\n\n"
-            "Faqat quyidagi formatdagi chizmalarni yuboring:\n"
-            "• PDF\n"
-            "• JPG/JPEG\n"
-            "• PNG"
+            "Iltimos, chizmangizni faqat PDF formatda yuboring.\n\n"
+            "Hozircha JPG, JPEG va PNG formatlar qabul qilinmaydi, "
+            "chunki AI PDF chizmalarni ancha aniqroq tahlil qiladi."
         )
         return
 
@@ -217,7 +218,7 @@ async def process_drawing(message: Message, file_id: str, filename: str) -> None
 
     try:
         await message.answer(
-            "✅ Chizma qabul qilindi.\n"
+            "✅ PDF chizma qabul qilindi.\n"
             "AI tekshiruv boshlandi. Natija tayyor bo‘lgach, shu yerga yuboraman."
         )
 
@@ -226,7 +227,7 @@ async def process_drawing(message: Message, file_id: str, filename: str) -> None
         telegram_file = await bot.get_file(file_id)
         await bot.download_file(telegram_file.file_path, destination=file_path)
 
-        logger.info("Fayl yuklandi: %s", file_path)
+        logger.info("PDF fayl yuklandi: %s", file_path)
 
         result = await asyncio.to_thread(
             evaluate_optional,
@@ -265,9 +266,9 @@ async def process_drawing(message: Message, file_id: str, filename: str) -> None
         await message.answer(
             "❌ Chizmaga ishlov berishda xatolik yuz berdi.\n\n"
             "Iltimos, quyidagilarni tekshirib qayta urinib ko‘ring:\n"
-            "• fayl PDF/JPG/PNG formatda bo‘lsin\n"
-            "• chizma juda xira bo‘lmasin\n"
-            "• fayl buzilmagan bo‘lsin\n\n"
+            "• fayl PDF formatda bo‘lsin\n"
+            "• PDF fayl buzilmagan bo‘lsin\n"
+            "• chizma juda xira bo‘lmasin\n\n"
             f"Texnik xatolik: {e}"
         )
 
@@ -282,7 +283,9 @@ async def start_handler(message: Message) -> None:
     await message.answer(
         "Assalomu alaykum!\n\n"
         "Men muhandislik grafikasi chizmalarini AI yordamida tekshiruvchi botman.\n\n"
-        "Chizma yuboring, men uni mezonlar bo‘yicha baholab, natijani jadval va overlay rasm ko‘rinishida qaytaraman.",
+        "Chizma yuboring, men uni mezonlar bo‘yicha baholab, natijani jadval "
+        "va overlay rasm ko‘rinishida qaytaraman.\n\n"
+        "❗ Muhim: hozircha faqat PDF formatdagi chizmalar qabul qilinadi.",
         reply_markup=upload_keyboard
     )
 
@@ -290,12 +293,9 @@ async def start_handler(message: Message) -> None:
 @dp.message(F.text == "Chizmani yuklang")
 async def upload_button_handler(message: Message) -> None:
     await message.answer(
-        "Iltimos, chizmangizni yuboring.\n\n"
-        "Qabul qilinadigan formatlar:\n"
-        "• PDF\n"
-        "• JPG/JPEG\n"
-        "• PNG\n\n"
-        "Tavsiya: chizmani sifatliroq yuborish uchun Telegram’da document/fayl sifatida yuborgan ma’qul."
+        "Iltimos, chizmangizni PDF formatda yuboring.\n\n"
+        "❗ Hozircha faqat PDF qabul qilinadi.\n"
+        "Sabab: PDF formatda AI chizmani ancha aniqroq tahlil qiladi."
     )
 
 
@@ -313,15 +313,16 @@ async def document_handler(message: Message) -> None:
 
 @dp.message(F.photo)
 async def photo_handler(message: Message) -> None:
-    photo = message.photo[-1]
-    filename = "drawing.jpg"
-    await process_drawing(message, photo.file_id, filename)
+    await message.answer(
+        "❌ Rasm formatlari hozircha qabul qilinmaydi.\n\n"
+        "Iltimos, chizmangizni PDF formatga o‘tkazib, fayl/document sifatida yuboring."
+    )
 
 
 @dp.message()
 async def unknown_message_handler(message: Message) -> None:
     await message.answer(
-        "Men hozircha faqat PDF, JPG, JPEG yoki PNG formatdagi chizmalarni qabul qilaman.\n\n"
+        "Men hozircha faqat PDF formatdagi chizmalarni qabul qilaman.\n\n"
         "Chizma yuborish uchun “Chizmani yuklang” tugmasini bosing."
     )
 
