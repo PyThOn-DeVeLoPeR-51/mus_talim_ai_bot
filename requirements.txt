@@ -1,0 +1,6 @@
+aiogram
+python-dotenv
+opencv-python-headless
+numpy
+pillow
+PyMuPDF

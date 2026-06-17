@@ -1,0 +1,7 @@
+.venv/
+.idea/
+.env
+__pycache__/
+*.pyc
+uploads/
+optional_mode_outputs/
