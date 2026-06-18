@@ -30,3 +30,25 @@ mus_talim_ai_bot/
 ├── .env.example
 ├── .gitignore
 └── README.md
+
+
+## Deploy qilish: Render Background Worker
+
+Bu bot polling orqali ishlaydi. Shuning uchun Render’da Web Service emas, Background Worker sifatida deploy qilish tavsiya qilinadi.
+
+### Render sozlamalari
+
+Service type:
+
+```text
+Background Worker
+
+Build Command:
+pip install -r requirements.txt
+
+Start Command:
+python bot.py
+
+Environment Variables:
+BOT_TOKEN=your_real_telegram_bot_token
+
